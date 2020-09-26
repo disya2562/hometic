@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -9,10 +8,11 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/disya2562/hometic/logger"
+
 	"github.com/gorilla/mux"
 
 	_ "github.com/lib/pq"
-	"go.uber.org/zap"
 )
 
 func main() {
@@ -24,17 +24,7 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	r.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			l := zap.NewExample()
-			l = l.With(zap.Namespace("hometic"), zap.String("I'm", "Disya"))
-			l.Info("pair-device") // move l.Info to handler
-
-			c := context.WithValue(r.Context(), "logger", l)
-			newR := r.WithContext(c)
-			next.ServeHTTP(w, newR)
-		})
-	})
+	r.Use(logger.Middleware)
 
 	r.Handle("/pair-device", PairDeviceHandler(NewCreatePairDevice(db))).Methods(http.MethodPost)
 
@@ -58,9 +48,7 @@ type Pair struct {
 func PairDeviceHandler(device Device) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		l := zap.NewExample()
-		l = l.With(zap.Namespace("hometic"), zap.String("I'm", "disya")) //return ของใหม่ ไม่ใช้ l ตัวเดิม
-		l.Info("pair-device")
+		logger.L(r.Context()).Info("pair-device")
 
 		var p Pair
 		err := json.NewDecoder(r.Body).Decode(&p)
