@@ -44,11 +44,10 @@ type Pair struct {
 
 func PairDeviceHandler(device Device) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		
-		l:=zap.NewExample()
-		l = l.With(zap.Namespace(key:"hometic"), zap.String(key:"I'm", val:"disya")) //return ของใหม่ ไม่ใช้ l ตัวเดิม
-	l.Info(msg:"pair-device")
-}
+
+		l := zap.NewExample()
+		l = l.With(zap.Namespace("hometic"), zap.String("I'm", "disya")) //return ของใหม่ ไม่ใช้ l ตัวเดิม
+		l.Info("pair-device")
 
 		var p Pair
 		err := json.NewDecoder(r.Body).Decode(&p)
