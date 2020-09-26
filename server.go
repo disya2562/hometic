@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -23,6 +24,18 @@ func main() {
 	}
 
 	r := mux.NewRouter()
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			l := zap.NewExample()
+			l = l.With(zap.Namespace("hometic"), zap.String("I'm", "Disya"))
+			l.Info("pair-device") // move l.Info to handler
+
+			c := context.WithValue(r.Context(), "logger", l)
+			newR := r.WithContext(c)
+			next.ServeHTTP(w, newR)
+		})
+	})
+
 	r.Handle("/pair-device", PairDeviceHandler(NewCreatePairDevice(db))).Methods(http.MethodPost)
 
 	addr := fmt.Sprintf("0.0.0.0:%s", os.Getenv("PORT"))
